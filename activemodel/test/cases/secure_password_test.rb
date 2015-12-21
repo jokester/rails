@@ -67,6 +67,14 @@ class SecurePasswordTest < ActiveModel::TestCase
     assert_equal ["is too long (maximum is 72 bytes)"], @user.errors[:password]
   end
 
+  test 'create a new user with validation and password length greater than 72 bytes' do
+    @user.password = 'あ' * 24 + 'a' # which is 73 bytes in utf-8
+    @user.password_confirmation = 'あ' * 24 + 'a'
+    assert !@user.valid?(:create), 'user should be invalid'
+    assert_equal 1, @user.errors.count
+    assert_equal ["is too long (maximum is 72 bytes)"], @user.errors[:password]
+  end
+
   test "create a new user with validation and a blank password confirmation" do
     @user.password = 'password'
     @user.password_confirmation = ''
