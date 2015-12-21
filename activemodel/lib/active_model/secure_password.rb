@@ -2,8 +2,9 @@ module ActiveModel
   module SecurePassword
     extend ActiveSupport::Concern
 
-    # BCrypt hash function can handle maximum 72 characters, and if we pass
-    # password of length more than 72 characters it ignores extra characters.
+    # BCrypt hash function can handle maximum 72 bytes, and if we pass
+    # password of length more than 72 bytes (can be fewer characters
+    # if some of them are multi-byte) it ignores extra bytes.
     # Hence need to put a restriction on password length.
     MAX_PASSWORD_LENGTH_ALLOWED = 72
 
@@ -18,7 +19,7 @@ module ActiveModel
       #
       # The following validations are added automatically:
       # * Password must be present on creation
-      # * Password length should be less than or equal to 72 characters
+      # * Password length should be less than or equal to 72 bytes
       # * Confirmation of password (using a +password_confirmation+ attribute)
       #
       # If password confirmation validation is not needed, simply leave out the
@@ -74,7 +75,12 @@ module ActiveModel
             record.errors.add(:password, :blank) unless record.password_digest.present?
           end
 
-          validates_length_of :password, maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
+          validate do |record|
+            if record.password && record.password.to_s.bytesize > ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
+              record.errors.add(:password, :too_long_bytes, count: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED)
+            end
+          end
+
           validates_confirmation_of :password, allow_blank: true
         end
       end
