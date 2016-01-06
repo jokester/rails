@@ -76,8 +76,12 @@ module ActiveModel
           end
 
           validate do |record|
-            if record.password && record.password.to_s.bytesize > ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
-              record.errors.add(:password, :too_long_bytes, count: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED)
+            if record.password
+              if record.password.size > ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
+                record.errors.add(:password, :too_long, count: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED)
+              elsif record.password.bytesize > ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
+                record.errors.add(:password, :too_long_bytes, count: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED)
+              end
             end
           end
 
